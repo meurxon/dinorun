@@ -1,5 +1,5 @@
 
-go to meurxon.github.io/dinorun/ to play
+go to https://meurxon.github.io/dinorun/ to play
 
 
 
