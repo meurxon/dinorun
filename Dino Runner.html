@@ -1,0 +1,2644 @@
+<!DOCTYPE html>
+<!-- saved from url=(0031)file:///C:/dino-game/index.html -->
+<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dino Runner</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-primary: #1a1a2e;
+            --bg-secondary: #16213e;
+            --panel-bg: #0a0a0a;
+            --panel-border: #333;
+            --text-primary: #fff;
+            --text-secondary: #ccc;
+            --text-muted: #888;
+            --accent-primary: #00d4ff;
+            --accent-secondary: #7b2cbf;
+            --canvas-bg: #f7f7f7;
+        }
+
+        body.light-mode {
+            --bg-primary: #e8e8e8;
+            --bg-secondary: #d0d0d0;
+            --panel-bg: #ffffff;
+            --panel-border: #ccc;
+            --text-primary: #1a1a2e;
+            --text-secondary: #444;
+            --text-muted: #666;
+            --canvas-bg: #fff;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            color: var(--text-primary);
+            transition: all 0.3s ease;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+            background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header-row {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .theme-toggle {
+            position: relative;
+            width: 60px;
+            height: 30px;
+            background: var(--panel-bg);
+            border: 2px solid var(--panel-border);
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .theme-toggle::before {
+            content: '☀️';
+            position: absolute;
+            left: 5px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .theme-toggle::after {
+            content: '🌙';
+            position: absolute;
+            right: 5px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 14px;
+            opacity: 0.3;
+            transition: all 0.3s ease;
+        }
+
+        .theme-toggle .toggle-knob {
+            position: absolute;
+            left: 3px;
+            top: 3px;
+            width: 20px;
+            height: 20px;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            border-radius: 50%;
+            transition: all 0.3s ease;
+        }
+
+        body.light-mode .theme-toggle .toggle-knob {
+            left: 33px;
+        }
+
+        body.light-mode .theme-toggle::before {
+            opacity: 0.3;
+        }
+
+        body.light-mode .theme-toggle::after {
+            opacity: 1;
+        }
+
+        .dropdown {
+            position: relative;
+        }
+
+        .dropdown-btn {
+            background: linear-gradient(135deg, var(--accent-secondary), #9b59b6);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(123, 44, 191, 0.3);
+        }
+
+        .dropdown-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(123, 44, 191, 0.5);
+        }
+
+        .dropdown-btn::after {
+            content: '▼';
+            font-size: 0.7rem;
+            transition: transform 0.3s ease;
+        }
+
+        .dropdown.open .dropdown-btn::after {
+            transform: rotate(180deg);
+        }
+
+        .dropdown-content {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            margin-top: 8px;
+            background: var(--panel-bg);
+            border-radius: 12px;
+            padding: 15px;
+            width: 340px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+            border: 2px solid var(--panel-border);
+            display: none;
+            z-index: 100;
+            max-height: 75vh;
+            overflow-y: auto;
+        }
+
+        .dropdown.open .dropdown-content {
+            display: block;
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .dropdown-content h3 {
+            font-size: 1rem;
+            color: var(--accent-primary);
+            margin-bottom: 10px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid var(--accent-secondary);
+        }
+
+        .dropdown-content h4 {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            margin: 12px 0 8px 0;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .control-group {
+            margin-bottom: 10px;
+        }
+
+        .control-group label {
+            display: block;
+            margin-bottom: 4px;
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+        }
+
+        .control-group input[type="range"] {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: var(--panel-border);
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        .control-group input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            cursor: pointer;
+            box-shadow: 0 0 8px rgba(0, 212, 255, 0.5);
+        }
+
+        .control-group .value-display {
+            text-align: right;
+            font-size: 0.75rem;
+            color: var(--accent-primary);
+            margin-top: 3px;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-top: 6px;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+            accent-color: var(--accent-secondary);
+        }
+
+        .checkbox-group label {
+            margin: 0;
+            cursor: pointer;
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+        }
+
+        .cheat-active {
+            color: #4ade80 !important;
+        }
+
+        .cheat-btn {
+            padding: 8px 12px;
+            background: var(--panel-border);
+            border: none;
+            border-radius: 6px;
+            color: var(--text-primary);
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin-top: 6px;
+            width: 100%;
+        }
+
+        .cheat-btn:hover {
+            background: var(--accent-secondary);
+        }
+
+        .cheat-btn.danger {
+            background: #dc2626;
+        }
+
+        .cheat-btn.danger:hover {
+            background: #ef4444;
+        }
+
+        .cheat-btn.success {
+            background: #16a34a;
+        }
+
+        .cheat-btn.success:hover {
+            background: #22c55e;
+        }
+
+        .game-wrapper {
+            display: flex;
+            gap: 30px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .game-container {
+            background: var(--panel-bg);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 10px 40px rgba(0, 212, 255, 0.2);
+            border: 2px solid var(--panel-border);
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        #gameCanvas {
+            display: block;
+            border-radius: 8px;
+            background: var(--canvas-bg);
+            transition: background 0.3s ease;
+        }
+
+        .score-display {
+            background: var(--panel-bg);
+            border-radius: 12px;
+            padding: 25px;
+            margin-top: 20px;
+            text-align: center;
+            border: 2px solid var(--panel-border);
+            min-width: 300px;
+            transition: all 0.3s ease;
+        }
+
+        .score-display h2 {
+            font-size: 1.1rem;
+            color: var(--text-muted);
+            margin-bottom: 10px;
+        }
+
+        .score-value {
+            font-size: 3rem;
+            font-weight: bold;
+            background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .multiplier-display {
+            font-size: 1.5rem;
+            color: #ffd700;
+            margin-top: 5px;
+        }
+
+        .high-score {
+            font-size: 1rem;
+            color: var(--text-muted);
+            margin-top: 10px;
+        }
+
+        .game-over-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            display: none;
+        }
+
+        .game-over-overlay h2 {
+            font-size: 2rem;
+            color: #ff4757;
+            margin-bottom: 10px;
+        }
+
+        .game-over-overlay p {
+            color: var(--text-muted);
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(0, 212, 255, 0.4);
+        }
+
+        .btn-secondary {
+            background: var(--panel-border);
+            color: var(--text-primary);
+        }
+
+        .btn-secondary:hover {
+            background: #444;
+        }
+
+        .active-cheats {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: var(--panel-bg);
+            border: 2px solid var(--panel-border);
+            border-radius: 12px;
+            padding: 15px;
+            font-size: 0.8rem;
+            max-width: 200px;
+        }
+
+        .active-cheats h4 {
+            color: var(--accent-primary);
+            margin-bottom: 8px;
+        }
+
+        .active-cheats span {
+            display: block;
+            color: #4ade80;
+            margin: 4px 0;
+        }
+
+        .lives-display {
+            font-size: 1.2rem;
+            color: #ff6b6b;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>DINO RUNNER</h1>
+    
+    <div class="header-row">
+        <div class="theme-toggle" id="themeToggle">
+            <div class="toggle-knob"></div>
+        </div>
+        
+        <div class="dropdown" id="settingsDropdown">
+            <button class="dropdown-btn" id="dropdownBtn">
+                <span>⚙ Cheats / Settings</span>
+            </button>
+            <div class="dropdown-content">
+                <h3>⚡ Power Cheats</h3>
+                
+                <h4>God Mode</h4>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="invincibleCheck">
+                    <label for="invincibleCheck" id="invincibleLabel" class="cheat-active">Invincibility</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="infiniteJumpCheck" checked="">
+                    <label for="infiniteJumpCheck" id="infiniteJumpLabel" class="cheat-active">Infinite Jump</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="ghostCheck">
+                    <label for="ghostCheck" id="ghostLabel" class="cheat-active">Ghost Mode (Phase through)</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="noclipCheck">
+                    <label for="noclipCheck" id="noclipLabel" class="cheat-active">Noclip (Walk through all)</label>
+                </div>
+
+                <h4>Movement</h4>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="flyingCheck">
+                    <label for="flyingCheck" id="flyingLabel" class="">Flying Mode</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="reverseGravityCheck">
+                    <label for="reverseGravityCheck" id="reverseGravityLabel" class="">Reverse Gravity</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="superJumpCheck">
+                    <label for="superJumpCheck" id="superJumpLabel" class="">Super Jump</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="autoRunCheck">
+                    <label for="autoRunCheck" id="autoRunLabel" class="">Auto Run</label>
+                </div>
+
+                <h4>Time &amp; Speed</h4>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="slowMoCheck">
+                    <label for="slowMoCheck" id="slowMoLabel" class="">Slow Motion (50%)</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="timeFreezeCheck">
+                    <label for="timeFreezeCheck" id="timeFreezeLabel" class="">Time Freeze (Pause all)</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="speedBoostCheck">
+                    <label for="speedBoostCheck" id="speedBoostLabel" class="">Speed Boost (+50%)</label>
+                </div>
+                <div class="control-group">
+                    <label>Slow Motion Strength</label>
+                    <input type="range" id="slowMoStrengthSlider" min="10" max="90" value="50">
+                    <div class="value-display" id="slowMoStrengthValue">50%</div>
+                </div>
+
+                <h4>Weapons &amp; Power-ups</h4>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="blasterCheck">
+                    <label for="blasterCheck" id="blasterLabel" class="">Blaster Mode (Click to shoot)</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="bombCheck">
+                    <label for="bombCheck" id="bombLabel" class="">Bomb Mode (Space to explode)</label>
+                </div>
+                <div class="control-group">
+                    <label>Blaster Fire Rate</label>
+                    <input type="range" id="blasterSpeedSlider" min="1" max="10" value="5">
+                    <div class="value-display" id="blasterSpeedValue">5</div>
+                </div>
+
+                <h4>Score Modifiers</h4>
+                <div class="control-group">
+                    <label>Score Multiplier (x1 - x800000)</label>
+                    <input type="range" id="multiplierSlider" min="1" max="800000" value="1">
+                    <div class="value-display" id="multiplierValue">x787073</div>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="scoreMagnetCheck">
+                    <label for="scoreMagnetCheck" id="scoreMagnetLabel" class="">Score Magnet (+100/sec)</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="doubleScoreCheck">
+                    <label for="doubleScoreCheck" id="doubleScoreLabel" class="">2x Score Gain</label>
+                </div>
+
+                <h4>Dino Customization</h4>
+                <div class="control-group">
+                    <label>Dino Size</label>
+                    <input type="range" id="sizeSlider" min="0.3" max="4" step="0.1" value="1">
+                    <div class="value-display" id="sizeValue">1x</div>
+                </div>
+                <div class="control-group">
+                    <label>Dino Color (Hue)</label>
+                    <input type="range" id="colorSlider" min="0" max="360" value="0">
+                    <div class="value-display" id="colorValue" style="color: rgb(126, 42, 42);">#535353</div>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="rainbowCheck">
+                    <label for="rainbowCheck" id="rainbowLabel" class="">Rainbow Mode</label>
+                </div>
+
+                <h4>Obstacle Control</h4>
+                <div class="control-group">
+                    <label>Obstacle Speed</label>
+                    <input type="range" id="obsSpeedSlider" min="0" max="3" step="0.1" value="1">
+                    <div class="value-display" id="obsSpeedValue">1x</div>
+                </div>
+                <div class="control-group">
+                    <label>Obstacle Size</label>
+                    <input type="range" id="obsSizeSlider" min="0.2" max="2" step="0.1" value="1">
+                    <div class="value-display" id="obsSizeValue">1x</div>
+                </div>
+                <div class="control-group">
+                    <label>Obstacle Frequency</label>
+                    <input type="range" id="freqSlider" min="10" max="300" value="100">
+                    <div class="value-display" id="freqValue">100</div>
+                </div>
+                <button class="cheat-btn danger" id="killAllBtn">💥 Kill All Obstacles</button>
+                <button class="cheat-btn" id="spawnFewBtn">➖ Reduce Obstacles</button>
+
+                <h4>Game Settings</h4>
+                <div class="control-group">
+                    <label>Game Speed</label>
+                    <input type="range" id="speedSlider" min="1" max="25" value="5">
+                    <div class="value-display" id="speedValue">5</div>
+                </div>
+                <div class="control-group">
+                    <label>Jump Height</label>
+                    <input type="range" id="jumpSlider" min="5" max="40" value="15">
+                    <div class="value-display" id="jumpValue">15</div>
+                </div>
+                <div class="control-group">
+                    <label>Gravity</label>
+                    <input type="range" id="gravitySlider" min="1" max="25" value="8">
+                    <div class="value-display" id="gravityValue">8</div>
+                </div>
+
+                <h4>Visual Effects</h4>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="particlesCheck" checked="">
+                    <label for="particlesCheck">Trail Particles</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="hitboxesCheck">
+                    <label for="hitboxesCheck" id="hitboxesLabel" class="">Show Hitboxes</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="contrastCheck">
+                    <label for="contrastCheck" id="contrastLabel" class="">High Contrast Mode</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="neonCheck">
+                    <label for="neonCheck" id="neonLabel" class="">Neon Glow Effect</label>
+                </div>
+
+                <h4>Player Stats</h4>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="extraLifeCheck">
+                    <label for="extraLifeCheck" id="extraLifeLabel" class="">Extra Lives (3 HP)</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="shieldCheck">
+                    <label for="shieldCheck" id="shieldLabel" class="">Energy Shield</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="megaLifeCheck">
+                    <label for="megaLifeCheck" id="megaLifeLabel" class="">Mega Lives (10 HP)</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="regenCheck">
+                    <label for="regenCheck" id="regenLabel" class="">Health Regen</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="reflectCheck">
+                    <label for="reflectCheck" id="reflectLabel" class="">Damage Reflect</label>
+                </div>
+
+                <h4>Advanced Abilities</h4>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="teleportCheck">
+                    <label for="teleportCheck" id="teleportLabel" class="">Teleport (Double Click)</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="dashCheck">
+                    <label for="dashCheck" id="dashLabel" class="">Dash Mode</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="phaseCheck">
+                    <label for="phaseCheck" id="phaseLabel" class="">Phase Shift</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="cloakCheck">
+                    <label for="cloakCheck" id="cloakLabel" class="">Cloaking Device</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="doubleJumpCheck">
+                    <label for="doubleJumpCheck" id="doubleJumpLabel" class="">Double Jump</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="tripleJumpCheck">
+                    <label for="tripleJumpCheck" id="tripleJumpLabel" class="">Triple Jump</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="wallJumpCheck">
+                    <label for="wallJumpCheck" id="wallJumpLabel" class="">Wall Jump</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="glideCheck">
+                    <label for="glideCheck" id="glideLabel" class="">Glide Mode</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="hoverCheck">
+                    <label for="hoverCheck" id="hoverLabel" class="">Hover Boots</label>
+                </div>
+
+                <h4>Offensive Weapons</h4>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="laserCheck">
+                    <label for="laserCheck" id="laserLabel" class="">Laser Beam</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="rocketCheck">
+                    <label for="rocketCheck" id="rocketLabel" class="">Rocket Launcher</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="shurikenCheck">
+                    <label for="shurikenCheck" id="shurikenLabel" class="">Shuriken Storm</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="flameCheck">
+                    <label for="flameCheck" id="flameLabel" class="">Flame Thrower</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="freezeRayCheck">
+                    <label for="freezeRayCheck" id="freezeRayLabel" class="">Freeze Ray</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="lightningCheck">
+                    <label for="lightningCheck" id="lightningLabel" class="">Lightning Strike</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="nukeCheck">
+                    <label for="nukeCheck" id="nukeLabel" class="">Mini Nuke</label>
+                </div>
+                <div class="control-group">
+                    <label>Weapon Power</label>
+                    <input type="range" id="weaponPowerSlider" min="1" max="10" value="5">
+                    <div class="value-display" id="weaponPowerValue">5</div>
+                </div>
+
+                <h4>Score Exploits</h4>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="scoreStealCheck">
+                    <label for="scoreStealCheck" id="scoreStealLabel" class="">Score Steal</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="scoreCloneCheck">
+                    <label for="scoreCloneCheck" id="scoreCloneLabel" class="">Score Cloning</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="infiniteScoreCheck">
+                    <label for="infiniteScoreCheck" id="infiniteScoreLabel" class="">Infinite Score Gain</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="autoScoreCheck">
+                    <label for="autoScoreCheck" id="autoScoreLabel" class="">Auto Score (+1000/sec)</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="comboMasterCheck">
+                    <label for="comboMasterCheck" id="comboMasterLabel" class="">Combo Master</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="luckyDropCheck">
+                    <label for="luckyDropCheck" id="luckyDropLabel" class="">Lucky Drops</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="coinRainCheck">
+                    <label for="coinRainCheck" id="coinRainLabel" class="">Coin Rain</label>
+                </div>
+                <div class="control-group">
+                    <label>Score Bonus</label>
+                    <input type="range" id="scoreBonusSlider" min="0" max="10000" value="100">
+                    <div class="value-display" id="scoreBonusValue">+100</div>
+                </div>
+
+                <h4>Time Manipulation</h4>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="rewindCheck">
+                    <label for="rewindCheck" id="rewindLabel" class="">Time Rewind</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="fastForwardCheck">
+                    <label for="fastForwardCheck" id="fastForwardLabel" class="">Fast Forward</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="timeWarpCheck">
+                    <label for="timeWarpCheck" id="timeWarpLabel" class="">Time Warp</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="timeLoopCheck">
+                    <label for="timeLoopCheck" id="timeLoopLabel" class="">Time Loop</label>
+                </div>
+                <div class="control-group">
+                    <label>Time Scale</label>
+                    <input type="range" id="timeScaleSlider" min="-10" max="20" value="1">
+                    <div class="value-display" id="timeScaleValue">1x</div>
+                </div>
+
+                <h4>World Control</h4>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="gravityReverseCheck">
+                    <label for="gravityReverseCheck" id="gravityReverseLabel" class="">Gravity Reverse</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="gravityZeroCheck">
+                    <label for="gravityZeroCheck" id="gravityZeroLabel" class="">Zero Gravity</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="gravityIntenseCheck">
+                    <label for="gravityIntenseCheck" id="gravityIntenseLabel" class="">Intense Gravity</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="worldFlipCheck">
+                    <label for="worldFlipCheck" id="worldFlipLabel" class="">World Flip</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="dimensionShiftCheck">
+                    <label for="dimensionShiftCheck" id="dimensionShiftLabel" class="">Dimension Shift</label>
+                </div>
+
+                <h4>Obstacle Manipulation</h4>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="obstacleDeleteCheck">
+                    <label for="obstacleDeleteCheck" id="obstacleDeleteLabel" class="">Auto Delete Obstacles</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="obstacleSlowCheck">
+                    <label for="obstacleSlowCheck" id="obstacleSlowLabel" class="">Slow Obstacles 90%</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="obstacleShrinkCheck">
+                    <label for="obstacleShrinkCheck" id="obstacleShrinkLabel" class="">Shrink Obstacles</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="obstaclePushCheck">
+                    <label for="obstaclePushCheck" id="obstaclePushLabel" class="">Push Obstacles Back</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="obstacleMagnetCheck">
+                    <label for="obstacleMagnetCheck" id="obstacleMagnetLabel" class="">Obstacle Magnet</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="obstacleCloneCheck">
+                    <label for="obstacleCloneCheck" id="obstacleCloneLabel" class="">Obstacle Cloning</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="obstacleExplodeCheck">
+                    <label for="obstacleExplodeCheck" id="obstacleExplodeLabel" class="">Auto Explode Obstacles</label>
+                </div>
+
+                <h4>Visual Effects</h4>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="sparkleCheck">
+                    <label for="sparkleCheck" id="sparkleLabel" class="">Sparkle Trail</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="fireTrailCheck">
+                    <label for="fireTrailCheck" id="fireTrailLabel" class="">Fire Trail</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="iceTrailCheck">
+                    <label for="iceTrailCheck" id="iceTrailLabel" class="">Ice Trail</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="starTrailCheck">
+                    <label for="starTrailCheck" id="starTrailLabel" class="">Star Trail</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="smokeCheck">
+                    <label for="smokeCheck" id="smokeLabel" class="">Smoke Effect</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="matrixCheck">
+                    <label for="matrixCheck" id="matrixLabel" class="">Matrix Rain</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="confettiCheck">
+                    <label for="confettiCheck" id="confettiLabel" class="">Confetti Mode</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="glowOutlineCheck">
+                    <label for="glowOutlineCheck" id="glowOutlineLabel" class="">Glow Outline</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="chromaticCheck">
+                    <label for="chromaticCheck" id="chromaticLabel" class="">Chromatic Aberration</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="screenShakeCheck">
+                    <label for="screenShakeCheck" id="screenShakeLabel" class="">Screen Shake</label>
+                </div>
+                <div class="control-group">
+                    <label>Visual Intensity</label>
+                    <input type="range" id="visualIntensitySlider" min="1" max="10" value="5">
+                    <div class="value-display" id="visualIntensityValue">5</div>
+                </div>
+
+                <h4>Audio Hacks</h4>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="soundMuteCheck">
+                    <label for="soundMuteCheck" id="soundMuteLabel" class="">Mute All Sounds</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="soundBoostCheck">
+                    <label for="soundBoostCheck" id="soundBoostLabel" class="">Sound Boost</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="echoCheck">
+                    <label for="echoCheck" id="echoLabel" class="">Echo Effect</label>
+                </div>
+
+                <h4>Mobility Boosts</h4>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="speedDoubleCheck">
+                    <label for="speedDoubleCheck" id="speedDoubleLabel" class="">Double Speed</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="speedTripleCheck">
+                    <label for="speedTripleCheck" id="speedTripleLabel" class="">Triple Speed</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="speedMaxCheck">
+                    <label for="speedMaxCheck" id="speedMaxLabel" class="">Max Speed</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="momentumCheck">
+                    <label for="momentumCheck" id="momentumLabel" class="">Momentum Boost</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="springShoesCheck">
+                    <label for="springShoesCheck" id="springShoesLabel" class="">Spring Shoes</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="rocketBootsCheck">
+                    <label for="rocketBootsCheck" id="rocketBootsLabel" class="">Rocket Boots</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="bounceCheck">
+                    <label for="bounceCheck" id="bounceLabel" class="">Super Bounce</label>
+                </div>
+
+                <h4>Defensive Shields</h4>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="forceFieldCheck">
+                    <label for="forceFieldCheck" id="forceFieldLabel" class="">Force Field</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="fireShieldCheck">
+                    <label for="fireShieldCheck" id="fireShieldLabel" class="">Fire Shield</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="iceShieldCheck">
+                    <label for="iceShieldCheck" id="iceShieldLabel" class="">Ice Shield</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="lightningShieldCheck">
+                    <label for="lightningShieldCheck" id="lightningShieldLabel" class="">Lightning Shield</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="mirrorShieldCheck">
+                    <label for="mirrorShieldCheck" id="mirrorShieldLabel" class="">Mirror Shield</label>
+                </div>
+
+                <h4>Special Powers</h4>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="invisibilityCheck">
+                    <label for="invisibilityCheck" id="invisibilityLabel" class="">Invisibility</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="timeStopCheck">
+                    <label for="timeStopCheck" id="timeStopLabel" class="">Time Stop (Total)</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="dimensionDoorCheck">
+                    <label for="dimensionDoorCheck" id="dimensionDoorLabel" class="">Dimension Door</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="portalCheck">
+                    <label for="portalCheck" id="portalLabel" class="">Portal Jump</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="cloneCheck">
+                    <label for="cloneCheck" id="cloneLabel" class="">Clone Mode</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="ghostWalkCheck">
+                    <label for="ghostWalkCheck" id="ghostWalkLabel" class="">Ghost Walk</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="phaseWalkCheck">
+                    <label for="phaseWalkCheck" id="phaseWalkLabel" class="">Phase Walk</label>
+                </div>
+
+                <h4>Environment Control</h4>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="nightModeCheck">
+                    <label for="nightModeCheck" id="nightModeLabel" class="">Night Mode</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="dayModeCheck">
+                    <label for="dayModeCheck" id="dayModeLabel" class="">Day Mode</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="rainModeCheck">
+                    <label for="rainModeCheck" id="rainModeLabel" class="">Rain Effect</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="snowModeCheck">
+                    <label for="snowModeCheck" id="snowModeLabel" class="">Snow Effect</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="volcanoModeCheck">
+                    <label for="volcanoModeCheck" id="volcanoModeLabel" class="">Volcano Mode</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="spaceModeCheck">
+                    <label for="spaceModeCheck" id="spaceModeLabel" class="">Space Mode</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="underwaterModeCheck">
+                    <label for="underwaterModeCheck" id="underwaterModeLabel" class="">Underwater Mode</label>
+                </div>
+
+                <h4>Collector Mode</h4>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="autoCollectCheck">
+                    <label for="autoCollectCheck" id="autoCollectLabel" class="">Auto Collect Items</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="magnetModeCheck">
+                    <label for="magnetModeCheck" id="magnetModeLabel" class="">Super Magnet</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="treasureHunterCheck">
+                    <label for="treasureHunterCheck" id="treasureHunterLabel" class="">Treasure Hunter</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="coinMultiplierCheck">
+                    <label for="coinMultiplierCheck" id="coinMultiplierLabel" class="">Coin x10</label>
+                </div>
+
+                <h4>Ultimate Powers</h4>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="godMode2Check">
+                    <label for="godMode2Check" id="godMode2Label" class="">GOD MODE 2.0</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="megaBlastCheck">
+                    <label for="megaBlastCheck" id="megaBlastLabel" class="">Mega Blast</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="megaShieldCheck">
+                    <label for="megaShieldCheck" id="megaShieldLabel" class="">Mega Shield</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="megaSpeedCheck">
+                    <label for="megaSpeedCheck" id="megaSpeedLabel" class="">Mega Speed</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="megaJumpCheck">
+                    <label for="megaJumpCheck" id="megaJumpLabel" class="">Mega Jump</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="allPowerupsCheck">
+                    <label for="allPowerupsCheck" id="allPowerupsLabel" class="">ALL POWERUPS</label>
+                </div>
+
+                <h4>Debug Features</h4>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="debugOverlayCheck">
+                    <label for="debugOverlayCheck" id="debugOverlayLabel" class="">Debug Overlay</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="coordsDisplayCheck">
+                    <label for="coordsDisplayCheck" id="coordsDisplayLabel" class="">Show Coordinates</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="fpsCounterCheck">
+                    <label for="fpsCounterCheck" id="fpsCounterLabel" class="">FPS Counter</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="perfStatsCheck">
+                    <label for="perfStatsCheck" id="perfStatsLabel" class="">Performance Stats</label>
+                </div>
+
+                <div style="margin-top: 15px; display: flex; gap: 8px;">
+                    <button class="btn btn-secondary" id="resetBtn" style="flex:1; padding: 10px;">Reset Score</button>
+                    <button class="btn btn-secondary" id="resetCheatsBtn" style="flex:1; padding: 10px;">Reset All</button>
+                </div>
+            </div>
+        </div>
+        
+        <button class="btn btn-primary" id="startBtn">START GAME</button>
+    </div>
+
+    <div class="game-wrapper">
+        <div class="game-container">
+            <canvas id="gameCanvas" width="800" height="300"></canvas>
+            <div class="game-over-overlay" id="gameOverOverlay" style="display: none;">
+                <h2>GAME OVER</h2>
+                <p>Press SPACE or TAP to restart</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="score-display">
+        <h2>CURRENT SCORE</h2>
+        <div class="score-value" id="currentScore">29,675,539,083,764</div>
+        <div class="multiplier-display" id="multiplierShow">x787073</div>
+        <div class="lives-display" id="livesDisplay"></div>
+        <div class="high-score">High Score: <span id="highScore">0</span></div>
+    </div>
+
+    <div class="active-cheats" id="activeCheats" style="display: block;">
+        <h4>Active Cheats:</h4>
+        <div id="cheatList"><span>✓ Invincibility</span><span>✓ Infinite Jump</span><span>✓ Ghost Mode (Phase through)</span><span>✓ Noclip (Walk through all)</span></div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const dropdown = document.getElementById('settingsDropdown');
+        const dropdownBtn = document.getElementById('dropdownBtn');
+
+        const themeToggle = document.getElementById('themeToggle');
+        themeToggle.addEventListener('click', () => {
+            document.body.classList.toggle('light-mode');
+        });
+
+        dropdownBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            dropdown.classList.toggle('open');
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!dropdown.contains(e.target)) {
+                dropdown.classList.remove('open');
+            }
+        });
+
+        const settings = {
+            speed: 5,
+            jumpHeight: 15,
+            gravity: 8,
+            frequency: 100,
+            multiplier: 1,
+            invincible: false,
+            infiniteJump: true,
+            ghost: false,
+            noclip: false,
+            flying: false,
+            reverseGravity: false,
+            superJump: false,
+            autoRun: false,
+            slowMo: false,
+            slowMoStrength: 50,
+            timeFreeze: false,
+            speedBoost: false,
+            blaster: false,
+            blasterSpeed: 5,
+            bomb: false,
+            scoreMagnet: false,
+            doubleScore: false,
+            dinoSize: 1,
+            dinoHue: 0,
+            rainbow: false,
+            obsSpeed: 1,
+            obsSize: 1,
+            particles: true,
+            hitboxes: false,
+            contrast: false,
+            neon: false,
+            extraLife: false,
+            shield: false,
+            megaLife: false,
+            regen: false,
+            reflect: false,
+            teleport: false,
+            dash: false,
+            phase: false,
+            cloak: false,
+            doubleJump: false,
+            tripleJump: false,
+            wallJump: false,
+            glide: false,
+            hover: false,
+            laser: false,
+            rocket: false,
+            shuriken: false,
+            flame: false,
+            freezeRay: false,
+            lightning: false,
+            nuke: false,
+            weaponPower: 5,
+            scoreSteal: false,
+            scoreClone: false,
+            infiniteScore: false,
+            autoScore: false,
+            comboMaster: false,
+            luckyDrop: false,
+            coinRain: false,
+            scoreBonus: 100,
+            rewind: false,
+            fastForward: false,
+            timeWarp: false,
+            timeLoop: false,
+            timeScale: 1,
+            gravityReverse: false,
+            gravityZero: false,
+            gravityIntense: false,
+            worldFlip: false,
+            dimensionShift: false,
+            obstacleDelete: false,
+            obstacleSlow: false,
+            obstacleShrink: false,
+            obstaclePush: false,
+            obstacleMagnet: false,
+            obstacleClone: false,
+            obstacleExplode: false,
+            sparkle: false,
+            fireTrail: false,
+            iceTrail: false,
+            starTrail: false,
+            smoke: false,
+            matrix: false,
+            confetti: false,
+            glowOutline: false,
+            chromatic: false,
+            screenShake: false,
+            visualIntensity: 5,
+            soundMute: false,
+            soundBoost: false,
+            echo: false,
+            speedDouble: false,
+            speedTriple: false,
+            speedMax: false,
+            momentum: false,
+            springShoes: false,
+            rocketBoots: false,
+            bounce: false,
+            forceField: false,
+            fireShield: false,
+            iceShield: false,
+            lightningShield: false,
+            mirrorShield: false,
+            invisibility: false,
+            timeStop: false,
+            dimensionDoor: false,
+            portal: false,
+            clone: false,
+            ghostWalk: false,
+            phaseWalk: false,
+            nightMode: false,
+            dayMode: false,
+            rainMode: false,
+            snowMode: false,
+            volcanoMode: false,
+            spaceMode: false,
+            underwaterMode: false,
+            autoCollect: false,
+            magnetMode: false,
+            treasureHunter: false,
+            coinMultiplier: false,
+            godMode2: false,
+            megaBlast: false,
+            megaShield: false,
+            megaSpeed: false,
+            megaJump: false,
+            allPowerups: false,
+            debugOverlay: false,
+            coordsDisplay: false,
+            fpsCounter: false,
+            perfStats: false
+        };
+
+        let playerLives = 3;
+        let shieldHits = 0;
+        let maxShieldHits = 3;
+
+        let gameState = {
+            isRunning: false,
+            isGameOver: false,
+            score: 0,
+            highScore: parseInt(localStorage.getItem('dinoHighScore')) || 0,
+            frameCount: 0
+        };
+
+        const dino = {
+            x: 50,
+            y: 200,
+            baseWidth: 50,
+            baseHeight: 60,
+            velocityY: 0,
+            isJumping: false,
+            jumpCount: 0,
+            maxJumps: 999,
+            groundY: 200,
+            tailWag: 0,
+            legFrame: 0,
+            canShoot: true
+        };
+
+        let obstacles = [];
+        let clouds = [];
+        let particles = [];
+        let projectiles = [];
+        let explosions = [];
+        let groundX = 0;
+        let rainbowHue = 0;
+
+        const colorPreview = document.getElementById('colorValue');
+        
+        function hslToHex(h) {
+            return `hsl(${h}, 50%, 33%)`;
+        }
+
+        document.getElementById('speedSlider').addEventListener('input', (e) => {
+            settings.speed = parseFloat(e.target.value);
+            document.getElementById('speedValue').textContent = settings.speed;
+        });
+
+        document.getElementById('jumpSlider').addEventListener('input', (e) => {
+            settings.jumpHeight = parseFloat(e.target.value);
+            document.getElementById('jumpValue').textContent = settings.jumpHeight;
+        });
+
+        document.getElementById('gravitySlider').addEventListener('input', (e) => {
+            settings.gravity = parseFloat(e.target.value);
+            document.getElementById('gravityValue').textContent = settings.gravity;
+        });
+
+        document.getElementById('freqSlider').addEventListener('input', (e) => {
+            settings.frequency = parseInt(e.target.value);
+            document.getElementById('freqValue').textContent = settings.frequency;
+        });
+
+        document.getElementById('multiplierSlider').addEventListener('input', (e) => {
+            settings.multiplier = parseInt(e.target.value);
+            document.getElementById('multiplierValue').textContent = `x${settings.multiplier}`;
+            document.getElementById('multiplierShow').textContent = `x${settings.multiplier}`;
+        });
+
+        document.getElementById('slowMoStrengthSlider').addEventListener('input', (e) => {
+            settings.slowMoStrength = parseInt(e.target.value);
+            document.getElementById('slowMoStrengthValue').textContent = settings.slowMoStrength + '%';
+        });
+
+        document.getElementById('blasterSpeedSlider').addEventListener('input', (e) => {
+            settings.blasterSpeed = parseInt(e.target.value);
+            document.getElementById('blasterSpeedValue').textContent = settings.blasterSpeed;
+        });
+
+        document.getElementById('weaponPowerSlider').addEventListener('input', (e) => {
+            settings.weaponPower = parseInt(e.target.value);
+            document.getElementById('weaponPowerValue').textContent = settings.weaponPower;
+        });
+
+        document.getElementById('scoreBonusSlider').addEventListener('input', (e) => {
+            settings.scoreBonus = parseInt(e.target.value);
+            document.getElementById('scoreBonusValue').textContent = '+' + settings.scoreBonus;
+        });
+
+        document.getElementById('timeScaleSlider').addEventListener('input', (e) => {
+            settings.timeScale = parseInt(e.target.value);
+            document.getElementById('timeScaleValue').textContent = settings.timeScale + 'x';
+        });
+
+        document.getElementById('visualIntensitySlider').addEventListener('input', (e) => {
+            settings.visualIntensity = parseInt(e.target.value);
+            document.getElementById('visualIntensityValue').textContent = settings.visualIntensity;
+        });
+
+        const cheatChecks = [
+            { id: 'invincibleCheck', setting: 'invincible', label: 'invincibleLabel' },
+            { id: 'infiniteJumpCheck', setting: 'infiniteJump', label: 'infiniteJumpLabel' },
+            { id: 'ghostCheck', setting: 'ghost', label: 'ghostLabel' },
+            { id: 'noclipCheck', setting: 'noclip', label: 'noclipLabel' },
+            { id: 'flyingCheck', setting: 'flying', label: 'flyingLabel' },
+            { id: 'reverseGravityCheck', setting: 'reverseGravity', label: 'reverseGravityLabel' },
+            { id: 'superJumpCheck', setting: 'superJump', label: 'superJumpLabel' },
+            { id: 'autoRunCheck', setting: 'autoRun', label: 'autoRunLabel' },
+            { id: 'slowMoCheck', setting: 'slowMo', label: 'slowMoLabel' },
+            { id: 'timeFreezeCheck', setting: 'timeFreeze', label: 'timeFreezeLabel' },
+            { id: 'speedBoostCheck', setting: 'speedBoost', label: 'speedBoostLabel' },
+            { id: 'blasterCheck', setting: 'blaster', label: 'blasterLabel' },
+            { id: 'bombCheck', setting: 'bomb', label: 'bombLabel' },
+            { id: 'scoreMagnetCheck', setting: 'scoreMagnet', label: 'scoreMagnetLabel' },
+            { id: 'doubleScoreCheck', setting: 'doubleScore', label: 'doubleScoreLabel' },
+            { id: 'rainbowCheck', setting: 'rainbow', label: 'rainbowLabel' },
+            { id: 'hitboxesCheck', setting: 'hitboxes', label: 'hitboxesLabel' },
+            { id: 'contrastCheck', setting: 'contrast', label: 'contrastLabel' },
+            { id: 'neonCheck', setting: 'neon', label: 'neonLabel' },
+            { id: 'extraLifeCheck', setting: 'extraLife', label: 'extraLifeLabel' },
+            { id: 'shieldCheck', setting: 'shield', label: 'shieldLabel' },
+            { id: 'megaLifeCheck', setting: 'megaLife', label: 'megaLifeLabel' },
+            { id: 'regenCheck', setting: 'regen', label: 'regenLabel' },
+            { id: 'reflectCheck', setting: 'reflect', label: 'reflectLabel' },
+            { id: 'teleportCheck', setting: 'teleport', label: 'teleportLabel' },
+            { id: 'dashCheck', setting: 'dash', label: 'dashLabel' },
+            { id: 'phaseCheck', setting: 'phase', label: 'phaseLabel' },
+            { id: 'cloakCheck', setting: 'cloak', label: 'cloakLabel' },
+            { id: 'doubleJumpCheck', setting: 'doubleJump', label: 'doubleJumpLabel' },
+            { id: 'tripleJumpCheck', setting: 'tripleJump', label: 'tripleJumpLabel' },
+            { id: 'wallJumpCheck', setting: 'wallJump', label: 'wallJumpLabel' },
+            { id: 'glideCheck', setting: 'glide', label: 'glideLabel' },
+            { id: 'hoverCheck', setting: 'hover', label: 'hoverLabel' },
+            { id: 'laserCheck', setting: 'laser', label: 'laserLabel' },
+            { id: 'rocketCheck', setting: 'rocket', label: 'rocketLabel' },
+            { id: 'shurikenCheck', setting: 'shuriken', label: 'shurikenLabel' },
+            { id: 'flameCheck', setting: 'flame', label: 'flameLabel' },
+            { id: 'freezeRayCheck', setting: 'freezeRay', label: 'freezeRayLabel' },
+            { id: 'lightningCheck', setting: 'lightning', label: 'lightningLabel' },
+            { id: 'nukeCheck', setting: 'nuke', label: 'nukeLabel' },
+            { id: 'scoreStealCheck', setting: 'scoreSteal', label: 'scoreStealLabel' },
+            { id: 'scoreCloneCheck', setting: 'scoreClone', label: 'scoreCloneLabel' },
+            { id: 'infiniteScoreCheck', setting: 'infiniteScore', label: 'infiniteScoreLabel' },
+            { id: 'autoScoreCheck', setting: 'autoScore', label: 'autoScoreLabel' },
+            { id: 'comboMasterCheck', setting: 'comboMaster', label: 'comboMasterLabel' },
+            { id: 'luckyDropCheck', setting: 'luckyDrop', label: 'luckyDropLabel' },
+            { id: 'coinRainCheck', setting: 'coinRain', label: 'coinRainLabel' },
+            { id: 'rewindCheck', setting: 'rewind', label: 'rewindLabel' },
+            { id: 'fastForwardCheck', setting: 'fastForward', label: 'fastForwardLabel' },
+            { id: 'timeWarpCheck', setting: 'timeWarp', label: 'timeWarpLabel' },
+            { id: 'timeLoopCheck', setting: 'timeLoop', label: 'timeLoopLabel' },
+            { id: 'gravityReverseCheck', setting: 'gravityReverse', label: 'gravityReverseLabel' },
+            { id: 'gravityZeroCheck', setting: 'gravityZero', label: 'gravityZeroLabel' },
+            { id: 'gravityIntenseCheck', setting: 'gravityIntense', label: 'gravityIntenseLabel' },
+            { id: 'worldFlipCheck', setting: 'worldFlip', label: 'worldFlipLabel' },
+            { id: 'dimensionShiftCheck', setting: 'dimensionShift', label: 'dimensionShiftLabel' },
+            { id: 'obstacleDeleteCheck', setting: 'obstacleDelete', label: 'obstacleDeleteLabel' },
+            { id: 'obstacleSlowCheck', setting: 'obstacleSlow', label: 'obstacleSlowLabel' },
+            { id: 'obstacleShrinkCheck', setting: 'obstacleShrink', label: 'obstacleShrinkLabel' },
+            { id: 'obstaclePushCheck', setting: 'obstaclePush', label: 'obstaclePushLabel' },
+            { id: 'obstacleMagnetCheck', setting: 'obstacleMagnet', label: 'obstacleMagnetLabel' },
+            { id: 'obstacleCloneCheck', setting: 'obstacleClone', label: 'obstacleCloneLabel' },
+            { id: 'obstacleExplodeCheck', setting: 'obstacleExplode', label: 'obstacleExplodeLabel' },
+            { id: 'sparkleCheck', setting: 'sparkle', label: 'sparkleLabel' },
+            { id: 'fireTrailCheck', setting: 'fireTrail', label: 'fireTrailLabel' },
+            { id: 'iceTrailCheck', setting: 'iceTrail', label: 'iceTrailLabel' },
+            { id: 'starTrailCheck', setting: 'starTrail', label: 'starTrailLabel' },
+            { id: 'smokeCheck', setting: 'smoke', label: 'smokeLabel' },
+            { id: 'matrixCheck', setting: 'matrix', label: 'matrixLabel' },
+            { id: 'confettiCheck', setting: 'confetti', label: 'confettiLabel' },
+            { id: 'glowOutlineCheck', setting: 'glowOutline', label: 'glowOutlineLabel' },
+            { id: 'chromaticCheck', setting: 'chromatic', label: 'chromaticLabel' },
+            { id: 'screenShakeCheck', setting: 'screenShake', label: 'screenShakeLabel' },
+            { id: 'soundMuteCheck', setting: 'soundMute', label: 'soundMuteLabel' },
+            { id: 'soundBoostCheck', setting: 'soundBoost', label: 'soundBoostLabel' },
+            { id: 'echoCheck', setting: 'echo', label: 'echoLabel' },
+            { id: 'speedDoubleCheck', setting: 'speedDouble', label: 'speedDoubleLabel' },
+            { id: 'speedTripleCheck', setting: 'speedTriple', label: 'speedTripleLabel' },
+            { id: 'speedMaxCheck', setting: 'speedMax', label: 'speedMaxLabel' },
+            { id: 'momentumCheck', setting: 'momentum', label: 'momentumLabel' },
+            { id: 'springShoesCheck', setting: 'springShoes', label: 'springShoesLabel' },
+            { id: 'rocketBootsCheck', setting: 'rocketBoots', label: 'rocketBootsLabel' },
+            { id: 'bounceCheck', setting: 'bounce', label: 'bounceLabel' },
+            { id: 'forceFieldCheck', setting: 'forceField', label: 'forceFieldLabel' },
+            { id: 'fireShieldCheck', setting: 'fireShield', label: 'fireShieldLabel' },
+            { id: 'iceShieldCheck', setting: 'iceShield', label: 'iceShieldLabel' },
+            { id: 'lightningShieldCheck', setting: 'lightningShield', label: 'lightningShieldLabel' },
+            { id: 'mirrorShieldCheck', setting: 'mirrorShield', label: 'mirrorShieldLabel' },
+            { id: 'invisibilityCheck', setting: 'invisibility', label: 'invisibilityLabel' },
+            { id: 'timeStopCheck', setting: 'timeStop', label: 'timeStopLabel' },
+            { id: 'dimensionDoorCheck', setting: 'dimensionDoor', label: 'dimensionDoorLabel' },
+            { id: 'portalCheck', setting: 'portal', label: 'portalLabel' },
+            { id: 'cloneCheck', setting: 'clone', label: 'cloneLabel' },
+            { id: 'ghostWalkCheck', setting: 'ghostWalk', label: 'ghostWalkLabel' },
+            { id: 'phaseWalkCheck', setting: 'phaseWalk', label: 'phaseWalkLabel' },
+            { id: 'nightModeCheck', setting: 'nightMode', label: 'nightModeLabel' },
+            { id: 'dayModeCheck', setting: 'dayMode', label: 'dayModeLabel' },
+            { id: 'rainModeCheck', setting: 'rainMode', label: 'rainModeLabel' },
+            { id: 'snowModeCheck', setting: 'snowMode', label: 'snowModeLabel' },
+            { id: 'volcanoModeCheck', setting: 'volcanoMode', label: 'volcanoModeLabel' },
+            { id: 'spaceModeCheck', setting: 'spaceMode', label: 'spaceModeLabel' },
+            { id: 'underwaterModeCheck', setting: 'underwaterMode', label: 'underwaterModeLabel' },
+            { id: 'autoCollectCheck', setting: 'autoCollect', label: 'autoCollectLabel' },
+            { id: 'magnetModeCheck', setting: 'magnetMode', label: 'magnetModeLabel' },
+            { id: 'treasureHunterCheck', setting: 'treasureHunter', label: 'treasureHunterLabel' },
+            { id: 'coinMultiplierCheck', setting: 'coinMultiplier', label: 'coinMultiplierLabel' },
+            { id: 'godMode2Check', setting: 'godMode2', label: 'godMode2Label' },
+            { id: 'megaBlastCheck', setting: 'megaBlast', label: 'megaBlastLabel' },
+            { id: 'megaShieldCheck', setting: 'megaShield', label: 'megaShieldLabel' },
+            { id: 'megaSpeedCheck', setting: 'megaSpeed', label: 'megaSpeedLabel' },
+            { id: 'megaJumpCheck', setting: 'megaJump', label: 'megaJumpLabel' },
+            { id: 'allPowerupsCheck', setting: 'allPowerups', label: 'allPowerupsLabel' },
+            { id: 'debugOverlayCheck', setting: 'debugOverlay', label: 'debugOverlayLabel' },
+            { id: 'coordsDisplayCheck', setting: 'coordsDisplay', label: 'coordsDisplayLabel' },
+            { id: 'fpsCounterCheck', setting: 'fpsCounter', label: 'fpsCounterLabel' },
+            { id: 'perfStatsCheck', setting: 'perfStats', label: 'perfStatsLabel' }
+        ];
+
+        cheatChecks.forEach(cheat => {
+            document.getElementById(cheat.id).addEventListener('change', (e) => {
+                settings[cheat.setting] = e.target.checked;
+                if (cheat.setting === 'allPowerups' && e.target.checked) {
+                    cheatChecks.forEach(c => {
+                        if (c.setting !== 'allPowerups') {
+                            settings[c.setting] = true;
+                            document.getElementById(c.id).checked = true;
+                        }
+                    });
+                }
+                updateCheatLabels();
+                updateActiveCheats();
+                if (cheat.setting === 'extraLife') {
+                    playerLives = settings.extraLife ? 3 : 1;
+                    updateLivesDisplay();
+                }
+                if (cheat.setting === 'megaLife') {
+                    playerLives = settings.megaLife ? 10 : (settings.extraLife ? 3 : 1);
+                    updateLivesDisplay();
+                }
+                if (cheat.setting === 'shield' || cheat.setting === 'megaShield') {
+                    shieldHits = (settings.shield || settings.megaShield) ? maxShieldHits : 0;
+                    updateLivesDisplay();
+                }
+                if (cheat.setting === 'godMode2') {
+                    settings.invincible = true;
+                    settings.ghost = true;
+                    settings.noclip = true;
+                    settings.infiniteJump = true;
+                    document.getElementById('invincibleCheck').checked = true;
+                    document.getElementById('ghostCheck').checked = true;
+                    document.getElementById('noclipCheck').checked = true;
+                    document.getElementById('infiniteJumpCheck').checked = true;
+                    updateCheatLabels();
+                }
+                if (cheat.setting === 'megaSpeed') {
+                    settings.speed = 25;
+                    document.getElementById('speedSlider').value = 25;
+                    document.getElementById('speedValue').textContent = '25';
+                }
+                if (cheat.setting === 'megaJump') {
+                    settings.jumpHeight = 40;
+                    document.getElementById('jumpSlider').value = 40;
+                    document.getElementById('jumpValue').textContent = '40';
+                }
+            });
+        });
+
+        document.getElementById('sizeSlider').addEventListener('input', (e) => {
+            settings.dinoSize = parseFloat(e.target.value);
+            document.getElementById('sizeValue').textContent = settings.dinoSize.toFixed(1) + 'x';
+        });
+
+        document.getElementById('colorSlider').addEventListener('input', (e) => {
+            settings.dinoHue = parseInt(e.target.value);
+            colorPreview.textContent = hslToHex(settings.dinoHue);
+            colorPreview.style.color = hslToHex(settings.dinoHue);
+        });
+
+        document.getElementById('obsSpeedSlider').addEventListener('input', (e) => {
+            settings.obsSpeed = parseFloat(e.target.value);
+            document.getElementById('obsSpeedValue').textContent = settings.obsSpeed.toFixed(1) + 'x';
+        });
+
+        document.getElementById('obsSizeSlider').addEventListener('input', (e) => {
+            settings.obsSize = parseFloat(e.target.value);
+            document.getElementById('obsSizeValue').textContent = settings.obsSize.toFixed(1) + 'x';
+        });
+
+        document.getElementById('particlesCheck').addEventListener('change', (e) => {
+            settings.particles = e.target.checked;
+        });
+
+        document.getElementById('killAllBtn').addEventListener('click', () => {
+            obstacles.forEach(obs => {
+                explosions.push({
+                    x: obs.x + obs.width / 2,
+                    y: obs.y + obs.height / 2,
+                    radius: 30,
+                    alpha: 1
+                });
+            });
+            obstacles = [];
+        });
+
+        document.getElementById('spawnFewBtn').addEventListener('click', () => {
+            settings.frequency = Math.min(300, settings.frequency + 50);
+            document.getElementById('freqSlider').value = settings.frequency;
+            document.getElementById('freqValue').textContent = settings.frequency;
+        });
+
+        function updateCheatLabels() {
+            cheatChecks.forEach(cheat => {
+                const label = document.getElementById(cheat.label);
+                if (label) {
+                    label.className = settings[cheat.setting] ? 'cheat-active' : '';
+                }
+            });
+        }
+
+        function updateActiveCheats() {
+            const activeCheatsDiv = document.getElementById('activeCheats');
+            const cheatList = document.getElementById('cheatList');
+            const activeList = [];
+
+            cheatChecks.forEach(cheat => {
+                if (settings[cheat.setting]) {
+                    const label = document.getElementById(cheat.label);
+                    if (label) activeList.push(label.textContent);
+                }
+            });
+
+            if (activeList.length > 0) {
+                cheatList.innerHTML = activeList.map(c => `<span>✓ ${c}</span>`).join('');
+                activeCheatsDiv.style.display = 'block';
+            } else {
+                activeCheatsDiv.style.display = 'none';
+            }
+        }
+
+        function updateLivesDisplay() {
+            const livesEl = document.getElementById('livesDisplay');
+            let livesText = '';
+            if (settings.extraLife) {
+                livesText = '❤️ '.repeat(playerLives);
+            }
+            if (settings.shield) {
+                livesText += '🛡️'.repeat(shieldHits);
+            }
+            livesEl.textContent = livesText;
+        }
+
+        document.getElementById('startBtn').addEventListener('click', startGame);
+        document.getElementById('resetBtn').addEventListener('click', resetScore);
+        document.getElementById('resetCheatsBtn').addEventListener('click', resetCheats);
+
+        document.addEventListener('keydown', (e) => {
+            if ((e.code === 'Space' || e.code === 'ArrowUp') && gameState.isRunning) {
+                e.preventDefault();
+                if (settings.bomb) {
+                    triggerBomb();
+                } else {
+                    jump();
+                }
+            }
+            if ((e.code === 'Space' || e.code === 'ArrowUp') && gameState.isGameOver) {
+                restartGame();
+            }
+        });
+
+        canvas.addEventListener('click', (e) => {
+            if (gameState.isGameOver) {
+                restartGame();
+            } else if (gameState.isRunning) {
+                if (settings.blaster) {
+                    shoot();
+                } else {
+                    jump();
+                }
+            } else {
+                startGame();
+            }
+        });
+
+        canvas.addEventListener('mousemove', (e) => {
+            if (settings.blaster && gameState.isRunning) {
+                dino.targetY = e.offsetY - dino.baseHeight * settings.dinoSize / 2;
+            }
+        });
+        
+        let lastClickTime = 0;
+        canvas.addEventListener('click', (e) => {
+            const currentTime = new Date().getTime();
+            if (settings.teleport && currentTime - lastClickTime < 300 && gameState.isRunning) {
+                const targetX = Math.min(e.offsetX, canvas.width - dino.baseWidth * settings.dinoSize);
+                const targetY = Math.min(Math.max(e.offsetY, 0), dino.groundY);
+                for (let i = 0; i < 20; i++) {
+                    particles.push({
+                        x: dino.x + dino.baseWidth * settings.dinoSize / 2,
+                        y: dino.y + dino.baseHeight * settings.dinoSize / 2,
+                        size: 3 + Math.random() * 5,
+                        alpha: 1,
+                        vx: (targetX - dino.x) / 20 + (Math.random() - 0.5) * 2,
+                        vy: (targetY - dino.y) / 20 + (Math.random() - 0.5) * 2
+                    });
+                }
+                dino.x = targetX;
+                dino.y = targetY;
+                dino.velocityY = 0;
+            }
+            lastClickTime = currentTime;
+        });
+
+        function jump() {
+            if (dino.jumpCount < dino.maxJumps) {
+                const jumpPower = settings.superJump ? settings.jumpHeight * 1.8 : settings.jumpHeight;
+                const gravMod = settings.reverseGravity ? -1 : 1;
+                dino.velocityY = -jumpPower * gravMod;
+                dino.isJumping = true;
+                dino.jumpCount++;
+            }
+        }
+
+        function shoot() {
+            if (!dino.canShoot) return;
+            dino.canShoot = false;
+            projectiles.push({
+                x: dino.x + dino.baseWidth * settings.dinoSize,
+                y: dino.y + dino.baseHeight * settings.dinoSize / 2,
+                speed: 15
+            });
+            setTimeout(() => { dino.canShoot = true; }, 1000 / settings.blasterSpeed);
+        }
+
+        function triggerBomb() {
+            explosions.push({
+                x: canvas.width / 2,
+                y: canvas.height / 2,
+                radius: 200,
+                alpha: 1
+            });
+            obstacles.forEach(obs => {
+                explosions.push({
+                    x: obs.x + obs.width / 2,
+                    y: obs.y + obs.height / 2,
+                    radius: 50,
+                    alpha: 1
+                });
+            });
+            obstacles = [];
+        }
+
+        function startGame() {
+            gameState.isRunning = true;
+            gameState.isGameOver = false;
+            gameState.score = 0;
+            gameState.frameCount = 0;
+            obstacles = [];
+            particles = [];
+            projectiles = [];
+            explosions = [];
+            playerLives = settings.extraLife ? 3 : 1;
+            shieldHits = settings.shield ? maxShieldHits : 0;
+            dino.y = dino.groundY;
+            dino.velocityY = 0;
+            dino.jumpCount = 0;
+            dino.maxJumps = settings.infiniteJump ? 999 : 2;
+            updateLivesDisplay();
+            document.getElementById('gameOverOverlay').style.display = 'none';
+            dropdown.classList.remove('open');
+            gameLoop();
+        }
+
+        function restartGame() {
+            document.getElementById('gameOverOverlay').style.display = 'none';
+            startGame();
+        }
+
+        function resetScore() {
+            gameState.highScore = 0;
+            localStorage.setItem('dinoHighScore', 0);
+            document.getElementById('highScore').textContent = '0';
+        }
+
+        function resetCheats() {
+            cheatChecks.forEach(cheat => {
+                settings[cheat.setting] = false;
+                document.getElementById(cheat.id).checked = false;
+            });
+            settings.infiniteJump = true;
+            document.getElementById('infiniteJumpCheck').checked = true;
+            settings.particles = true;
+            document.getElementById('particlesCheck').checked = true;
+            settings.dinoSize = 1;
+            settings.dinoHue = 0;
+            settings.obsSpeed = 1;
+            settings.obsSize = 1;
+            settings.slowMoStrength = 50;
+            settings.blasterSpeed = 5;
+            settings.frequency = 100;
+            settings.speed = 5;
+            settings.jumpHeight = 15;
+            settings.gravity = 8;
+            settings.weaponPower = 5;
+            settings.scoreBonus = 100;
+            settings.timeScale = 1;
+            settings.visualIntensity = 5;
+            
+            document.getElementById('sizeSlider').value = 1;
+            document.getElementById('colorSlider').value = 0;
+            document.getElementById('obsSpeedSlider').value = 1;
+            document.getElementById('obsSizeSlider').value = 1;
+            document.getElementById('slowMoStrengthSlider').value = 50;
+            document.getElementById('blasterSpeedSlider').value = 5;
+            document.getElementById('freqSlider').value = 100;
+            document.getElementById('speedSlider').value = 5;
+            document.getElementById('jumpSlider').value = 15;
+            document.getElementById('gravitySlider').value = 8;
+            document.getElementById('weaponPowerSlider').value = 5;
+            document.getElementById('scoreBonusSlider').value = 100;
+            document.getElementById('timeScaleSlider').value = 1;
+            document.getElementById('visualIntensitySlider').value = 5;
+            
+            document.getElementById('sizeValue').textContent = '1x';
+            document.getElementById('colorValue').textContent = '#535353';
+            document.getElementById('obsSpeedValue').textContent = '1x';
+            document.getElementById('obsSizeValue').textContent = '1x';
+            document.getElementById('slowMoStrengthValue').textContent = '50%';
+            document.getElementById('blasterSpeedValue').textContent = '5';
+            document.getElementById('freqValue').textContent = '100';
+            document.getElementById('speedValue').textContent = '5';
+            document.getElementById('jumpValue').textContent = '15';
+            document.getElementById('gravityValue').textContent = '8';
+            document.getElementById('weaponPowerValue').textContent = '5';
+            document.getElementById('scoreBonusValue').textContent = '+100';
+            document.getElementById('timeScaleValue').textContent = '1x';
+            document.getElementById('visualIntensityValue').textContent = '5';
+            
+            playerLives = 1;
+            shieldHits = 0;
+            dino.maxJumps = 999;
+            colorPreview.style.color = hslToHex(0);
+            
+            updateCheatLabels();
+            updateActiveCheats();
+            updateLivesDisplay();
+        }
+
+        function takeDamage() {
+            if (settings.invincible || settings.noclip) return;
+            
+            if (settings.shield && shieldHits > 0) {
+                shieldHits--;
+                updateLivesDisplay();
+                return;
+            }
+            
+            if (settings.extraLife && playerLives > 1) {
+                playerLives--;
+                updateLivesDisplay();
+                return;
+            }
+            
+            gameState.isRunning = false;
+            gameState.isGameOver = true;
+            
+            const finalScore = gameState.score * settings.multiplier;
+            if (finalScore > gameState.highScore) {
+                gameState.highScore = finalScore;
+                localStorage.setItem('dinoHighScore', gameState.highScore);
+                document.getElementById('highScore').textContent = gameState.highScore;
+            }
+            
+            document.getElementById('gameOverOverlay').style.display = 'block';
+        }
+
+        function spawnObstacle() {
+            if (settings.timeFreeze) return;
+            const type = Math.random() > 0.35 ? 'cactus' : 'bird';
+            const sizes = [
+                { w: 25, h: 50 }, { w: 30, h: 60 }, { w: 40, h: 70 },
+                { w: 50, h: 80 }, { w: 60, h: 90 }
+            ];
+            const size = sizes[Math.floor(Math.random() * sizes.length)];
+            const obstacle = {
+                x: canvas.width + 50,
+                y: type === 'bird' ? 80 + Math.random() * 80 : 260 - size.h * settings.obsSize,
+                width: size.w * settings.obsSize,
+                height: size.h * settings.obsSize,
+                type: type,
+                baseSpeed: settings.obsSpeed
+            };
+            obstacles.push(obstacle);
+        }
+
+        function spawnCloud() {
+            clouds.push({
+                x: canvas.width + 50,
+                y: 30 + Math.random() * 80,
+                width: 60 + Math.random() * 40,
+                speed: 1 + Math.random()
+            });
+        }
+
+        function spawnParticle() {
+            if (!settings.particles) return;
+            particles.push({
+                x: dino.x + 10,
+                y: dino.y + dino.baseHeight * settings.dinoSize - 5,
+                size: 3 + Math.random() * 4,
+                alpha: 1,
+                vx: -2 - Math.random() * 2,
+                vy: -1 - Math.random() * 2
+            });
+        }
+
+        function update() {
+            const timeMod = settings.slowMo ? (settings.slowMoStrength / 100) : 1;
+            
+            if (settings.flying && gameState.isRunning) {
+                const targetY = dino.targetY || dino.groundY;
+                dino.y += (targetY - dino.y) * 0.1;
+            } else {
+                const gravMod = settings.reverseGravity ? -1 : 1;
+                dino.velocityY += settings.gravity * 0.1 * gravMod * timeMod;
+                dino.y += dino.velocityY * timeMod;
+
+                if (settings.reverseGravity) {
+                    if (dino.y <= 20) {
+                        dino.y = 20;
+                        dino.velocityY = 0;
+                    }
+                } else {
+                    if (dino.y >= dino.groundY) {
+                        dino.y = dino.groundY;
+                        dino.velocityY = 0;
+                        dino.isJumping = false;
+                        if (!settings.infiniteJump) dino.jumpCount = 0;
+                    }
+                }
+            }
+
+            if (settings.autoRun && gameState.isRunning && !dino.isJumping) {
+                jump();
+            }
+            
+            if (settings.doubleJump && dino.jumpCount >= 1 && dino.isJumping) {
+                dino.maxJumps = 2;
+            }
+            
+            if (settings.tripleJump && dino.jumpCount >= 2 && dino.isJumping) {
+                dino.maxJumps = 3;
+            }
+            
+            if (settings.glide && dino.isJumping && dino.velocityY > 0) {
+                dino.velocityY = Math.min(dino.velocityY, 2);
+            }
+            
+            if (settings.hover && gameState.isRunning) {
+                dino.velocityY *= 0.95;
+                if (dino.y < dino.groundY - 5) {
+                    dino.velocityY += 0.1;
+                }
+            }
+            
+            if (settings.springShoes && dino.y >= dino.groundY) {
+                dino.velocityY = -settings.jumpHeight * 2;
+                dino.isJumping = true;
+            }
+            
+            if (settings.rocketBoots && dino.isJumping) {
+                dino.velocityY = Math.max(dino.velocityY, -20);
+            }
+            
+            if (settings.bounce && dino.y >= dino.groundY) {
+                dino.velocityY = -settings.jumpHeight * 1.5;
+                dino.isJumping = true;
+            }
+            
+            if (settings.speedDouble) {
+                dino.x += 2;
+            }
+            
+            if (settings.speedTriple) {
+                dino.x += 4;
+            }
+            
+            if (settings.speedMax) {
+                dino.x += 8;
+            }
+            
+            if (settings.dash && gameState.frameCount % 60 === 0 && gameState.isRunning) {
+                dino.x += 100;
+            }
+            
+            if (settings.invisibility || settings.cloak) {
+                ctx.globalAlpha = 0.3;
+            }
+            
+            if (settings.ghostWalk || settings.phaseWalk) {
+                ctx.globalAlpha = 0.5;
+            }
+
+            dino.tailWag += 0.2;
+            dino.legFrame += 0.3 * timeMod;
+
+            gameState.frameCount++;
+            
+            const scoreGain = settings.doubleScore ? 2 : 1;
+            if (gameState.frameCount % Math.max(5, Math.floor(11 - settings.speed)) === 0) {
+                gameState.score += scoreGain;
+            }
+
+            if (settings.scoreMagnet && gameState.frameCount % 6 === 0) {
+                gameState.score += 100;
+            }
+            
+            if (settings.autoScore && gameState.frameCount % 6 === 0) {
+                gameState.score += 1000;
+            }
+            
+            if (settings.infiniteScore) {
+                gameState.score += 1;
+            }
+            
+            if (settings.scoreSteal && gameState.frameCount % 30 === 0) {
+                gameState.score += 500;
+            }
+            
+            if (settings.scoreClone) {
+                gameState.score += settings.scoreBonus;
+            }
+            
+            if (settings.comboMaster && gameState.frameCount % 10 === 0) {
+                gameState.score += 50 * (1 + Math.floor(gameState.frameCount / 100));
+            }
+            
+            if (settings.coinRain && gameState.frameCount % 20 === 0) {
+                gameState.score += 200;
+            }
+            
+            if (settings.luckyDrop && gameState.frameCount % 100 === 0) {
+                const bonus = Math.floor(Math.random() * 5000) + 1000;
+                gameState.score += bonus;
+            }
+            
+            if (settings.treasureHunter && gameState.frameCount % 50 === 0) {
+                gameState.score += 1000;
+            }
+            
+            if (settings.autoCollect && gameState.frameCount % 30 === 0) {
+                gameState.score += 500;
+            }
+            
+            if (settings.coinMultiplier) {
+                gameState.score += 1;
+            }
+
+            if (!settings.timeFreeze) {
+                if (gameState.frameCount % settings.frequency === 0) {
+                    spawnObstacle();
+                }
+            }
+            
+            if (settings.obstacleDelete && gameState.frameCount % 5 === 0) {
+                if (obstacles.length > 0) {
+                    obstacles.shift();
+                }
+            }
+            
+            if (settings.obstaclePush && gameState.frameCount % 10 === 0) {
+                obstacles.forEach(obs => {
+                    obs.x += 50;
+                });
+            }
+            
+            if (settings.obstacleExplode && gameState.frameCount % 30 === 0) {
+                if (obstacles.length > 0) {
+                    const obs = obstacles[0];
+                    explosions.push({
+                        x: obs.x + obs.width / 2,
+                        y: obs.y + obs.height / 2,
+                        radius: 40,
+                        alpha: 1
+                    });
+                    obstacles.shift();
+                    gameState.score += 50;
+                }
+            }
+
+            if (gameState.frameCount % 100 === 0) {
+                spawnCloud();
+            }
+
+            if (gameState.frameCount % 3 === 0) {
+                spawnParticle();
+            }
+
+            projectiles.forEach((proj, idx) => {
+                proj.x += proj.speed;
+                if (proj.x > canvas.width) {
+                    projectiles.splice(idx, 1);
+                }
+            });
+
+            explosions.forEach((exp, idx) => {
+                exp.alpha -= 0.05;
+                if (exp.alpha <= 0) {
+                    explosions.splice(idx, 1);
+                }
+            });
+
+            obstacles.forEach((obs, index) => {
+                const speedMod = settings.speedBoost ? 1.5 : 1;
+                const slowMod = settings.obstacleSlow ? 0.1 : 1;
+                obs.x -= settings.speed * obs.baseSpeed * speedMod * slowMod * timeMod;
+                if (obs.x + obs.width < 0) {
+                    obstacles.splice(index, 1);
+                }
+
+                projectiles.forEach((proj, pIdx) => {
+                    if (proj.x > obs.x && proj.x < obs.x + obs.width &&
+                        proj.y > obs.y && proj.y < obs.y + obs.height) {
+                        explosions.push({
+                            x: obs.x + obs.width / 2,
+                            y: obs.y + obs.height / 2,
+                            radius: 30,
+                            alpha: 1
+                        });
+                        obstacles.splice(index, 1);
+                        projectiles.splice(pIdx, 1);
+                        gameState.score += 10 * settings.multiplier;
+                    }
+                });
+
+                if (!settings.ghost && !settings.noclip && !settings.invincible) {
+                    const dinoW = dino.baseWidth * settings.dinoSize;
+                    const dinoH = dino.baseHeight * settings.dinoSize;
+                    const padding = 5;
+                    if (
+                        dino.x + padding < obs.x + obs.width - padding &&
+                        dino.x + dinoW - padding > obs.x + padding &&
+                        dino.y + padding < obs.y + obs.height &&
+                        dino.y + dinoH - padding > obs.y + padding
+                    ) {
+                        takeDamage();
+                    }
+                }
+            });
+
+            clouds.forEach((cloud, index) => {
+                cloud.x -= cloud.speed * timeMod;
+                if (cloud.x + cloud.width < 0) {
+                    clouds.splice(index, 1);
+                }
+            });
+
+            particles.forEach((p, index) => {
+                p.x += p.vx * timeMod;
+                p.y += p.vy * timeMod;
+                p.alpha -= 0.03;
+                if (p.alpha <= 0) {
+                    particles.splice(index, 1);
+                }
+            });
+
+            groundX -= settings.speed * timeMod;
+            if (groundX <= -20) groundX = 0;
+            
+            if (settings.regen && settings.megaLife && playerLives < 10 && gameState.frameCount % 60 === 0) {
+                playerLives = Math.min(10, playerLives + 1);
+                updateLivesDisplay();
+            } else if (settings.regen && settings.extraLife && playerLives < 3 && gameState.frameCount % 60 === 0) {
+                playerLives = Math.min(3, playerLives + 1);
+                updateLivesDisplay();
+            }
+            
+            if (settings.reflect && gameState.isRunning && obstacles.length > 0) {
+                if (gameState.frameCount % 120 === 0) {
+                    const closestObs = obstacles.reduce((prev, curr) => 
+                        (curr.x < prev.x) ? curr : prev
+                    );
+                    if (closestObs && closestObs.x > dino.x) {
+                        gameState.score += 25;
+                    }
+                }
+            }
+
+            if (settings.rainbow) {
+                rainbowHue = (rainbowHue + 2) % 360;
+            }
+        }
+
+        function drawPixelDino(x, y, size, hue) {
+            const s = size;
+            const currentHue = settings.rainbow ? rainbowHue : hue;
+            const color = `hsl(${currentHue}, 50%, 33%)`;
+            const darkColor = `hsl(${currentHue}, 50%, 25%)`;
+            const lightColor = `hsl(${currentHue}, 50%, 45%)`;
+            const eyeWhite = '#ffffff';
+            const eyeBlack = '#000000';
+
+            if (settings.neon) {
+                ctx.shadowColor = `hsl(${currentHue}, 100%, 50%)`;
+                ctx.shadowBlur = 20;
+            }
+
+            ctx.fillStyle = color;
+
+            ctx.fillRect(x + 10*s, y, 30*s, 10*s);
+            ctx.fillRect(x + 5*s, y + 10*s, 40*s, 25*s);
+            ctx.fillRect(x, y + 15*s, 10*s, 15*s);
+            ctx.fillRect(x + 35*s, y + 15*s, 15*s, 20*s);
+            
+            ctx.fillRect(x + 5*s, y + 35*s, 15*s, 20*s);
+            ctx.fillRect(x + 25*s, y + 35*s, 15*s, 20*s);
+            
+            ctx.fillRect(x + 40*s, y + 20*s, 10*s, 8*s);
+            ctx.fillRect(x + 45*s, y + 25*s, 8*s, 6*s);
+            
+            ctx.fillRect(x + 15*s, y + 10*s, 20*s, 15*s);
+            ctx.fillStyle = eyeWhite;
+            ctx.fillRect(x + 20*s, y + 12*s, 12*s, 10*s);
+            ctx.fillStyle = eyeBlack;
+            ctx.fillRect(x + 26*s, y + 14*s, 4*s, 4*s);
+            
+            ctx.fillStyle = darkColor;
+            ctx.fillRect(x + 5*s, y + 50*s, 6*s, 8*s);
+            ctx.fillRect(x + 10*s, y + 55*s, 4*s, 3*s);
+            ctx.fillRect(x + 25*s, y + 50*s, 6*s, 8*s);
+            ctx.fillRect(x + 30*s, y + 55*s, 4*s, 3*s);
+            
+            const tailWag = Math.sin(dino.tailWag) * 3 * s;
+            ctx.fillStyle = color;
+            ctx.fillRect(x - 8*s, y + 20*s + tailWag, 10*s, 6*s);
+            ctx.fillRect(x - 12*s, y + 22*s + tailWag, 6*s, 4*s);
+            
+            ctx.fillStyle = lightColor;
+            ctx.fillRect(x + 35*s, y + 8*s, 3*s, 3*s);
+            ctx.fillRect(x + 8*s, y + 30*s, 4*s, 3*s);
+
+            ctx.shadowBlur = 0;
+        }
+
+        function draw() {
+            let bgColor = document.body.classList.contains('light-mode') ? '#ffffff' : '#f7f7f7';
+            if (settings.contrast) {
+                bgColor = '#000000';
+            }
+            if (settings.nightMode) {
+                bgColor = '#0a0a1a';
+            }
+            if (settings.spaceMode) {
+                bgColor = '#000011';
+            }
+            if (settings.underwaterMode) {
+                bgColor = '#001a33';
+            }
+            ctx.fillStyle = bgColor;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            if (settings.spaceMode && gameState.isRunning) {
+                ctx.fillStyle = '#ffffff';
+                for (let i = 0; i < 5; i++) {
+                    ctx.beginPath();
+                    ctx.arc(Math.random() * canvas.width, Math.random() * canvas.height, 1 + Math.random(), 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+            
+            if (settings.rainMode && gameState.isRunning) {
+                ctx.strokeStyle = 'rgba(100, 150, 255, 0.5)';
+                ctx.lineWidth = 1;
+                for (let i = 0; i < 20; i++) {
+                    const x = Math.random() * canvas.width;
+                    const y = (gameState.frameCount * 5 + i * 50) % canvas.height;
+                    ctx.beginPath();
+                    ctx.moveTo(x, y);
+                    ctx.lineTo(x - 5, y + 15);
+                    ctx.stroke();
+                }
+            }
+            
+            if (settings.snowMode && gameState.isRunning) {
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+                for (let i = 0; i < 15; i++) {
+                    const x = (gameState.frameCount * 2 + i * 60) % canvas.width;
+                    const y = (gameState.frameCount + i * 40) % canvas.height;
+                    ctx.beginPath();
+                    ctx.arc(x, y, 2 + Math.random() * 2, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+            
+            if (settings.volcanoMode) {
+                ctx.fillStyle = 'rgba(255, 100, 0, 0.1)';
+                ctx.fillRect(0, canvas.height - 50, canvas.width, 50);
+            }
+            
+            if (settings.underwaterMode && gameState.isRunning) {
+                ctx.fillStyle = 'rgba(100, 200, 255, 0.1)';
+                for (let i = 0; i < 5; i++) {
+                    ctx.fillRect((gameState.frameCount * 0.5 + i * 200) % canvas.width, 0, 30, canvas.height);
+                }
+            }
+
+            const groundColor = settings.contrast ? '#333' : (document.body.classList.contains('light-mode') ? '#ccc' : '#e8e8e8');
+            ctx.fillStyle = groundColor;
+            clouds.forEach(cloud => {
+                ctx.fillStyle = settings.contrast ? '#666' : groundColor;
+                ctx.beginPath();
+                ctx.arc(cloud.x, cloud.y, cloud.width * 0.3, 0, Math.PI * 2);
+                ctx.arc(cloud.x + cloud.width * 0.3, cloud.y - 5, cloud.width * 0.25, 0, Math.PI * 2);
+                ctx.arc(cloud.x + cloud.width * 0.5, cloud.y, cloud.width * 0.3, 0, Math.PI * 2);
+                ctx.fill();
+            });
+
+            const lineColor = settings.contrast ? '#fff' : (document.body.classList.contains('light-mode') ? '#bbb' : '#555');
+            const dashColor = settings.contrast ? '#fff' : '#999';
+            ctx.fillStyle = lineColor;
+            ctx.fillRect(0, 260, canvas.width, 2);
+            
+            ctx.strokeStyle = dashColor;
+            ctx.lineWidth = 1;
+            for (let i = 0; i < canvas.width + 20; i += 20) {
+                ctx.beginPath();
+                ctx.moveTo(i + groundX, 262);
+                ctx.lineTo(i + groundX + 10, 262);
+                ctx.stroke();
+            }
+
+            particles.forEach(p => {
+                ctx.fillStyle = `rgba(100, 100, 255, ${p.alpha})`;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                ctx.fill();
+            });
+
+            if (settings.sparkle && gameState.isRunning) {
+                for (let i = 0; i < 3; i++) {
+                    particles.push({
+                        x: dino.x + Math.random() * dino.baseWidth * settings.dinoSize,
+                        y: dino.y + Math.random() * dino.baseHeight * settings.dinoSize,
+                        size: 2 + Math.random() * 3,
+                        alpha: 1,
+                        vx: -1 - Math.random(),
+                        vy: -1 - Math.random()
+                    });
+                }
+            }
+            
+            if (settings.fireTrail && gameState.isRunning) {
+                ctx.fillStyle = `rgba(255, ${100 + Math.random() * 50}, 0, 0.7)`;
+                ctx.beginPath();
+                ctx.arc(dino.x - 5, dino.y + dino.baseHeight * settings.dinoSize / 2, 8, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            
+            if (settings.iceTrail && gameState.isRunning) {
+                ctx.fillStyle = `rgba(150, 220, 255, 0.6)`;
+                ctx.beginPath();
+                ctx.arc(dino.x - 5, dino.y + dino.baseHeight * settings.dinoSize / 2, 6, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            
+            if (settings.starTrail && gameState.isRunning) {
+                ctx.fillStyle = `rgba(255, 255, 100, 0.8)`;
+                for (let i = 0; i < 2; i++) {
+                    ctx.beginPath();
+                    ctx.arc(dino.x - 10 - i * 8, dino.y + dino.baseHeight * settings.dinoSize * Math.random(), 3, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+            
+            if (settings.confetti && gameState.isRunning && gameState.frameCount % 10 === 0) {
+                const colors = ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff', '#00ffff'];
+                for (let i = 0; i < 5; i++) {
+                    particles.push({
+                        x: Math.random() * canvas.width,
+                        y: -10,
+                        size: 4 + Math.random() * 4,
+                        alpha: 1,
+                        vx: -1 + Math.random() * 2,
+                        vy: 2 + Math.random() * 2,
+                        color: colors[Math.floor(Math.random() * colors.length)]
+                    });
+                }
+            }
+            
+            if (settings.matrix && gameState.isRunning) {
+                ctx.fillStyle = 'rgba(0, 255, 0, 0.05)';
+                for (let i = 0; i < 3; i++) {
+                    ctx.fillRect(Math.random() * canvas.width, 0, 10, canvas.height);
+                }
+            }
+            
+            if (settings.screenShake && gameState.isRunning) {
+                const shakeX = (Math.random() - 0.5) * settings.visualIntensity;
+                const shakeY = (Math.random() - 0.5) * settings.visualIntensity;
+                ctx.translate(shakeX, shakeY);
+            }
+            
+            if (settings.chromatic && gameState.isRunning) {
+                ctx.globalCompositeOperation = 'screen';
+                ctx.globalAlpha = 0.3;
+            }
+            
+            if (settings.debugOverlay && gameState.isRunning) {
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+                ctx.fillRect(10, 10, 200, 80);
+                ctx.fillStyle = '#00ff00';
+                ctx.font = '12px monospace';
+                ctx.fillText(`FPS: ${Math.round(1000 / 16)}`, 20, 30);
+                ctx.fillText(`Score: ${gameState.score}`, 20, 50);
+                ctx.fillText(`Obstacles: ${obstacles.length}`, 20, 70);
+                ctx.fillText(`Particles: ${particles.length}`, 20, 85);
+            }
+            
+            if (settings.fpsCounter && gameState.isRunning) {
+                ctx.fillStyle = '#ff0000';
+                ctx.font = 'bold 14px monospace';
+                ctx.textAlign = 'right';
+                ctx.fillText(`FPS: ${Math.round(1000 / 16)}`, canvas.width - 10, 20);
+                ctx.textAlign = 'left';
+            }
+            
+            if (settings.coordsDisplay && gameState.isRunning) {
+                ctx.fillStyle = '#ffff00';
+                ctx.font = '12px monospace';
+                ctx.fillText(`X: ${Math.round(dino.x)} Y: ${Math.round(dino.y)}`, 10, canvas.height - 10);
+            }
+
+            projectiles.forEach(proj => {
+                ctx.fillStyle = '#ffff00';
+                ctx.shadowColor = '#ffff00';
+                ctx.shadowBlur = 10;
+                ctx.beginPath();
+                ctx.arc(proj.x, proj.y, 5, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.shadowBlur = 0;
+            });
+
+            explosions.forEach(exp => {
+                ctx.fillStyle = `rgba(255, 100, 0, ${exp.alpha})`;
+                ctx.beginPath();
+                ctx.arc(exp.x, exp.y, exp.radius * (1 - exp.alpha), 0, Math.PI * 2);
+                ctx.fill();
+            });
+
+            if (settings.invincible && gameState.isRunning) {
+                ctx.strokeStyle = `rgba(0, 255, 0, ${0.3 + Math.sin(gameState.frameCount * 0.2) * 0.3})`;
+                ctx.lineWidth = 3;
+                ctx.strokeRect(
+                    dino.x - 5, dino.y - 5,
+                    dino.baseWidth * settings.dinoSize + 10,
+                    dino.baseHeight * settings.dinoSize + 10
+                );
+            }
+
+            if (settings.shield && shieldHits > 0 && gameState.isRunning) {
+                ctx.strokeStyle = `rgba(0, 150, 255, ${0.5 + Math.sin(gameState.frameCount * 0.1) * 0.3})`;
+                ctx.lineWidth = 4;
+                ctx.beginPath();
+                ctx.arc(
+                    dino.x + dino.baseWidth * settings.dinoSize / 2,
+                    dino.y + dino.baseHeight * settings.dinoSize / 2,
+                    dino.baseWidth * settings.dinoSize * 0.8,
+                    0, Math.PI * 2
+                );
+                ctx.stroke();
+            }
+            
+            if (settings.forceField && gameState.isRunning) {
+                ctx.strokeStyle = `rgba(0, 255, 255, ${0.4 + Math.sin(gameState.frameCount * 0.15) * 0.3})`;
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                ctx.arc(
+                    dino.x + dino.baseWidth * settings.dinoSize / 2,
+                    dino.y + dino.baseHeight * settings.dinoSize / 2,
+                    dino.baseWidth * settings.dinoSize * 1.2,
+                    0, Math.PI * 2
+                );
+                ctx.stroke();
+            }
+            
+            if (settings.fireShield && gameState.isRunning) {
+                ctx.strokeStyle = `rgba(255, 100, 0, ${0.5 + Math.sin(gameState.frameCount * 0.2) * 0.3})`;
+                ctx.lineWidth = 5;
+                ctx.beginPath();
+                ctx.arc(
+                    dino.x + dino.baseWidth * settings.dinoSize / 2,
+                    dino.y + dino.baseHeight * settings.dinoSize / 2,
+                    dino.baseWidth * settings.dinoSize * 1,
+                    0, Math.PI * 2
+                );
+                ctx.stroke();
+            }
+            
+            if (settings.iceShield && gameState.isRunning) {
+                ctx.strokeStyle = `rgba(150, 220, 255, ${0.5 + Math.sin(gameState.frameCount * 0.2) * 0.3})`;
+                ctx.lineWidth = 4;
+                ctx.beginPath();
+                ctx.arc(
+                    dino.x + dino.baseWidth * settings.dinoSize / 2,
+                    dino.y + dino.baseHeight * settings.dinoSize / 2,
+                    dino.baseWidth * settings.dinoSize * 0.9,
+                    0, Math.PI * 2
+                );
+                ctx.stroke();
+            }
+            
+            if (settings.lightningShield && gameState.isRunning) {
+                ctx.strokeStyle = `rgba(255, 255, 0, ${0.4 + Math.random() * 0.4})`;
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                for (let i = 0; i < 8; i++) {
+                    const angle = (i / 8) * Math.PI * 2 + gameState.frameCount * 0.05;
+                    const x1 = dino.x + dino.baseWidth * settings.dinoSize / 2 + Math.cos(angle) * dino.baseWidth * settings.dinoSize * 0.5;
+                    const y1 = dino.y + dino.baseHeight * settings.dinoSize / 2 + Math.sin(angle) * dino.baseHeight * settings.dinoSize * 0.5;
+                    ctx.moveTo(x1, y1);
+                    ctx.lineTo(x1 + (Math.random() - 0.5) * 20, y1 + (Math.random() - 0.5) * 20);
+                }
+                ctx.stroke();
+            }
+            
+            if (settings.megaShield && gameState.isRunning) {
+                const gradient = ctx.createRadialGradient(
+                    dino.x + dino.baseWidth * settings.dinoSize / 2,
+                    dino.y + dino.baseHeight * settings.dinoSize / 2,
+                    dino.baseWidth * settings.dinoSize * 0.3,
+                    dino.x + dino.baseWidth * settings.dinoSize / 2,
+                    dino.y + dino.baseHeight * settings.dinoSize / 2,
+                    dino.baseWidth * settings.dinoSize * 1.5
+                );
+                gradient.addColorStop(0, 'rgba(0, 255, 255, 0)');
+                gradient.addColorStop(1, `rgba(0, 255, 255, ${0.3 + Math.sin(gameState.frameCount * 0.1) * 0.2})`);
+                ctx.fillStyle = gradient;
+                ctx.beginPath();
+                ctx.arc(
+                    dino.x + dino.baseWidth * settings.dinoSize / 2,
+                    dino.y + dino.baseHeight * settings.dinoSize / 2,
+                    dino.baseWidth * settings.dinoSize * 1.5,
+                    0, Math.PI * 2
+                );
+                ctx.fill();
+            }
+
+            if (settings.ghost && gameState.isRunning) {
+                ctx.globalAlpha = 0.5;
+            }
+
+            if (settings.hitboxes && gameState.isRunning) {
+                ctx.strokeStyle = '#ff0000';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(dino.x, dino.y, dino.baseWidth * settings.dinoSize, dino.baseHeight * settings.dinoSize);
+            }
+
+            drawPixelDino(dino.x, dino.y, settings.dinoSize, settings.dinoHue);
+
+            if (settings.clone && gameState.isRunning) {
+                drawPixelDino(dino.x + 30, dino.y, settings.dinoSize, (settings.dinoHue + 180) % 360);
+                drawPixelDino(dino.x - 30, dino.y, settings.dinoSize, (settings.dinoHue + 90) % 360);
+            }
+            
+            if (settings.megaBlast && gameState.isRunning && gameState.frameCount % 20 === 0) {
+                explosions.push({
+                    x: dino.x + dino.baseWidth * settings.dinoSize,
+                    y: dino.y + dino.baseHeight * settings.dinoSize / 2,
+                    radius: 100,
+                    alpha: 1
+                });
+                obstacles.forEach((obs, idx) => {
+                    if (obs.x < dino.x + 200) {
+                        explosions.push({
+                            x: obs.x + obs.width / 2,
+                            y: obs.y + obs.height / 2,
+                            radius: 30,
+                            alpha: 1
+                        });
+                        obstacles.splice(idx, 1);
+                        gameState.score += 20 * settings.multiplier;
+                    }
+                });
+            }
+            
+            if (settings.glowOutline && gameState.isRunning) {
+                ctx.shadowColor = `hsl(${settings.dinoHue}, 100%, 50%)`;
+                ctx.shadowBlur = 20;
+                drawPixelDino(dino.x, dino.y, settings.dinoSize, settings.dinoHue);
+                ctx.shadowBlur = 0;
+            }
+            
+            if (settings.worldFlip) {
+                ctx.save();
+                ctx.translate(canvas.width / 2, canvas.height / 2);
+                ctx.scale(1, Math.cos(gameState.frameCount * 0.05));
+                ctx.translate(-canvas.width / 2, -canvas.height / 2);
+            }
+            
+            ctx.globalAlpha = 1;
+
+            obstacles.forEach(obs => {
+                const shrinkFactor = settings.obstacleShrink ? 0.5 : 1;
+                const obsX = obs.x + obs.width * (1 - shrinkFactor) / 2;
+                const obsY = obs.y + obs.height * (1 - shrinkFactor) / 2;
+                const obsW = obs.width * shrinkFactor;
+                const obsH = obs.height * shrinkFactor;
+                
+                if (settings.hitboxes) {
+                    ctx.strokeStyle = '#ff0000';
+                    ctx.lineWidth = 2;
+                    ctx.strokeRect(obsX, obsY, obsW, obsH);
+                }
+
+                if (obs.type === 'cactus') {
+                    const cactusColor = settings.contrast ? '#00ff00' : '#2d5016';
+                    ctx.fillStyle = cactusColor;
+                    ctx.fillRect(obsX, obsY, obsW, obsH);
+                    ctx.fillRect(obsX - 5 * shrinkFactor, obsY + 10 * shrinkFactor, 8 * shrinkFactor, 6 * shrinkFactor);
+                    ctx.fillRect(obsX + obsW - 3 * shrinkFactor, obsY + 15 * shrinkFactor, 8 * shrinkFactor, 6 * shrinkFactor);
+                    ctx.fillRect(obsX + obsW / 2 - 2 * shrinkFactor, obsY + obsH - 8 * shrinkFactor, 4 * shrinkFactor, 8 * shrinkFactor);
+                    ctx.fillStyle = settings.contrast ? '#00cc00' : '#4a7c23';
+                    ctx.fillRect(obsX + 3 * shrinkFactor, obsY + 3 * shrinkFactor, obsW - 6 * shrinkFactor, 4 * shrinkFactor);
+                } else {
+                    ctx.fillStyle = settings.contrast ? '#ff00ff' : '#e74c3c';
+                    ctx.beginPath();
+                    ctx.ellipse(obsX + obsW / 2, obsY + obsH / 2, obsW / 2, obsH / 2, 0, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.fillStyle = settings.contrast ? '#cc00cc' : '#c0392b';
+                    ctx.beginPath();
+                    ctx.moveTo(obsX + obsW, obsY + obsH / 2);
+                    ctx.lineTo(obsX + obsW + 12 * shrinkFactor, obsY + obsH / 2 - 4 * shrinkFactor);
+                    ctx.lineTo(obsX + obsW + 12 * shrinkFactor, obsY + obsH / 2 + 4 * shrinkFactor);
+                    ctx.closePath();
+                    ctx.fill();
+                    ctx.fillStyle = settings.contrast ? '#ffff00' : '#f1c40f';
+                    ctx.beginPath();
+                    ctx.arc(obsX + obsW * 0.7, obsY + obsH * 0.3, 4 * shrinkFactor, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            });
+
+            if (settings.timeFreeze) {
+                ctx.fillStyle = 'rgba(100, 150, 255, 0.3)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.fillStyle = '#fff';
+                ctx.font = 'bold 24px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText('❄️ TIME FROZEN', canvas.width / 2, 50);
+            }
+
+            if (settings.worldFlip) {
+                ctx.restore();
+            }
+            
+            if (settings.portal && gameState.isRunning) {
+                ctx.strokeStyle = `rgba(200, 100, 255, ${0.3 + Math.sin(gameState.frameCount * 0.1) * 0.2})`;
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                ctx.arc(dino.x + dino.baseWidth * settings.dinoSize, dino.y + dino.baseHeight * settings.dinoSize / 2, 20, 0, Math.PI * 2);
+                ctx.stroke();
+            }
+            
+            if (settings.dimensionDoor && gameState.isRunning && gameState.frameCount % 120 === 0) {
+                const portals = [
+                    { x: 100, y: 200 },
+                    { x: 400, y: 150 },
+                    { x: 700, y: 200 }
+                ];
+                portals.forEach(p => {
+                    ctx.strokeStyle = 'rgba(100, 255, 100, 0.5)';
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.ellipse(p.x, p.y, 15, 25, 0, 0, Math.PI * 2);
+                    ctx.stroke();
+                });
+            }
+            
+            if (settings.dimensionShift && gameState.isRunning) {
+                ctx.fillStyle = `rgba(${Math.random() * 255}, ${Math.random() * 255}, ${Math.random() * 255}, 0.1)`;
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+            }
+            
+            if (settings.godMode2 && gameState.isRunning) {
+                ctx.strokeStyle = `rgba(255, 215, 0, ${0.5 + Math.sin(gameState.frameCount * 0.2) * 0.3})`;
+                ctx.lineWidth = 4;
+                ctx.strokeRect(
+                    dino.x - 10, dino.y - 10,
+                    dino.baseWidth * settings.dinoSize + 20,
+                    dino.baseHeight * settings.dinoSize + 20
+                );
+            }
+            
+            const displayScore = gameState.score * settings.multiplier;
+            document.getElementById('currentScore').textContent = displayScore.toLocaleString();
+        }
+
+        function gameLoop() {
+            if (!gameState.isRunning) return;
+            
+            update();
+            draw();
+            requestAnimationFrame(gameLoop);
+        }
+
+        document.getElementById('highScore').textContent = gameState.highScore;
+
+        updateCheatLabels();
+        updateLivesDisplay();
+        draw();
+    </script>
+
+
+</body></html>
